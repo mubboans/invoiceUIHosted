@@ -14,6 +14,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { PaymentService } from 'src/app/services/payment.service';
 import { cashfreeSandbox } from "cashfree-pg-sdk-javascript";
+import { Router } from '@angular/router';
 @Component({
   selector: 'app-invoice',
   templateUrl: './invoice.component.html',
@@ -33,6 +34,8 @@ export class InvoiceComponent implements OnInit {
   filteredData:any[];
   invoicepdf:boolean=false;
   invoicecontent:any;
+  loadingState:boolean=false;
+  invylength :number;
   paymentArray=[
     {name:"Create Payment Link",value:1},
     {name:"Create Payment Gateway",value:2}
@@ -45,9 +48,10 @@ export class InvoiceComponent implements OnInit {
     {name:"upi",value:'upi'},
   ]
   paymentGate:boolean=false;
-  paymentSessionId="session_865qQHlSgTzVXcRTesyDrYLn2e65s0u5bunLqby5PN9UAa_VIahEU2etSR_oqZLV1sWHV3nFoNcl";
+  
   @ViewChild('invoiceId') invoiceId: ElementRef;
-  constructor(private messageService: MessageService,public paymentService:PaymentService,
+  historyPdfTable: boolean =false;
+  constructor(public router:Router,private messageService: MessageService,public paymentService:PaymentService,
     public confirmationService: ConfirmationService,public invoiceitemser:InvoiceItemService,public fb:FormBuilder,public invoiceService:InvoiceService,public customerser:CustomerService) { 
   }
 
@@ -145,19 +149,17 @@ export class InvoiceComponent implements OnInit {
       paymentType:product.paymentType,
       link_currency:product.paymentDetail.link_currency,
       link_purpose:product.paymentDetail.link_purpose,
-
       totalamount:product.totalamount,
       createdOn:product.createdOn,
       invoicedate:new Date(product.invoicedate),
       invoiceno:product.invoiceno,
       customerId:this.mapCustomerwithid(product.customerId),
-   
+      methodtype:product.methodtype,
     })
     this.invoiceitem.clear();
 
     for (let i of product.item) {
-      if(i){
-        
+      if(i){ 
         this.invoiceitem.push(this.createItem(i));
       } 
       
@@ -222,13 +224,6 @@ export class InvoiceComponent implements OnInit {
     }
     this.filteredData = filtered;
 }
-  selectRow(checkValue) {
-    if (checkValue) {
-      this.deleteId = this.invoiceArr.map(value => value._id);
-    } else {
-      this.deleteId = [];
-    }
-  }
   deleteSelectedProducts(){
     console.log(this.deleteId);
     let id =this.deleteId.map(x=>x._id);
@@ -260,6 +255,72 @@ export class InvoiceComponent implements OnInit {
       }
   });
   }
+  bulkInvoicePdf(){
+    console.log(this.deleteId);
+    let bulkids =this.deleteId.map(x=>x.invoiceno);
+    console.log(bulkids);
+    this.invoiceService.getBulkPDF(bulkids).subscribe((x:any)=>{
+      if(x){
+
+        const blob = new Blob([x], {
+          type: 'application/zip'
+        });
+        this.deleteId=[]
+        bulkids=[] 
+        const url = window.URL.createObjectURL(blob);
+        window.open(url);
+        this.loadingState=false;
+        // console.log(x);
+        this.messageService.add({severity:'success', summary: 'Dowloaded Invoice', detail: 'Success', life: 3000});
+        
+        this.getinvoice();
+      }
+    })
+  }
+  viewDownloadHistory(){
+    if(this.deleteId == undefined){
+      this.messageService.add({severity:'error', summary: 'Select Id of invoice', detail: 'Failed', life: 3000});
+    }
+    let bulkidszip =this.deleteId.map(x=>x.invoiceno);
+    // this.historyPdfTable= true;
+    this.invoiceService.postInvoiceHistoryArchieve(bulkidszip).subscribe((x:any)=>{
+      console.log(x);
+      
+       
+        // routerLink="../history"
+        // if(x){
+        //   this.messageService.add({severity:'info', summary: 'SuccessFull Generated Zip', detail: 'Done', life: 3000});
+          this.deleteId=[];
+        
+          bulkidszip=[] ;
+        // }
+      });
+       setTimeout(()=>{
+        this.invylength = this.deleteId.length;
+        this.router.navigate(['/history']);
+        },1000);
+        }
+
+  bulkInvoicePdfdir(){
+    let bulkidsdir =this.deleteId.map(x=>x.invoiceno);
+    this.invoiceService.getbulkpdfdir(bulkidsdir).subscribe((x:any)=>{
+      if(x){
+
+        const blob = new Blob([x], {
+          type: 'application/zip'
+        });
+        this.deleteId=[]
+        bulkidsdir=[] 
+        const url = window.URL.createObjectURL(blob);
+        window.open(url);
+        this.loadingState=false;
+        // console.log(x);
+        this.messageService.add({severity:'success', summary: 'Dowloaded Invoice', detail: 'Success', life: 3000});
+        
+        this.getinvoice();
+      }
+    })
+  }
 getinvoice(){
   this.invoiceService.getInvoice().subscribe((x)=>{
     this.invoiceArr= x.data;
@@ -279,14 +340,27 @@ createPayementGateway(sessioId,component,parent){
     alert("No Session ID Found");
     return
   }
+
   let dropinConfig = {
     components:component,
-    onSuccess: function(data){
-        parent.innerHTML='';
+    onSuccess: (data)=>{
       if (data.order && data.order.status == "PAID") {
+        let d = {
+          status:data.order.status,
+          amount:data.transaction.transactionAmount,
+          transactionId:data.transaction.transactionId
+      }
+        parent.innerHTML='';
+        this.invoiceService.updateStatusAfterPayment(data.order.orderId,d).subscribe((x:any)=>{
+          this.messageService.add({severity:'success', summary: 'Success', detail: 'Payment Recieved', life: 3000});
+          this.getinvoice();
+        },(err)=>{
+          this.messageService.add({severity:'error', summary: 'Failed', detail: 'Payment Failed', life: 3000});
+        })
+        // updateStatusAfterPayment
+     
         console.log(data);
         
-        alert(JSON.stringify(data));
       }
     },
     onFailure: function(data){
@@ -412,6 +486,7 @@ addItem(){
       link_minimum_partial_amount:this.invoiceGroup.get('link_minimum_partial_amount').value,
       link_currency:this.invoiceGroup.get('link_currency').value.toUpperCase(),
       link_purpose:this.invoiceGroup.get('link_purpose').value,
+      methodtype:this.invoiceGroup.get('methodtype').value,
     }
     let datacheck = this.invoiceGroup.get('__v').value
     let id = this.invoiceGroup.get('_id').value; 

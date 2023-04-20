@@ -1,0 +1,66 @@
+<div class="grid">
+    <div class="col-12 md:col-12 text-center m-auto px-4 mt-4 mb-4" *ngIf="historyData">
+        <p-table [value]="historyData" styleClass="p-datatable-responsive-demo">
+            <ng-template pTemplate="caption">
+                <p-toolbar styleClass="p-mb-4 p-mt-2">
+                    <ng-template pTemplate="left"></ng-template>
+                    <h4>Total Record found {{historyData.length}}</h4>
+                    <ng-template pTemplate="right">
+                        <button pButton pRipple icon="pi pi-refresh pi-spin" (click)="getData('refresh')" class="p-button-rounded p-button-help"></button>
+                    </ng-template>
+                </p-toolbar>
+            </ng-template>
+            <ng-template pTemplate="header">
+                <tr>
+                    <th>Name</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Total Length of invoice</th>
+                    <th>Total Time In Seconds</th>
+                    <th>Action</th>
+                </tr>
+            </ng-template>loadData
+            <ng-template pTemplate="body" let-data>
+                <tr>
+                    <td> {{data.filename | slice:0:10}}...</td>
+                    <td>{{data.filedate | date: 'dd/MM/yyyy'}}</td>
+                    <td> <p-tag value="{{data.status}}" severity="success" icon="{{data.status == 'Pending' ? 'pi pi-thumbs-down': 'pi pi-thumbs-up' }}"></p-tag></td>
+                    <td>{{data.filelength}}</td>
+                    <td>{{data.timeTaken | slice:0:2}}</td>
+                    <!-- <td>{{cutomer.address.city}}</td>
+                    <td>{{cutomer.address.pincode}}</td> -->
+                    <td>
+                        <button pButton pRipple icon="{{data.status == 'Pending' ? 'pi pi-spin pi-spinner' :'pi pi-arrow-down'}}" class="{{data.status == 'Pending' ? 'p-button-rounded p-button-info':'p-button-rounded p-button-success'}}" (click)="downloadFile(data.filePath)"></button>
+
+                        <button pButton pRipple icon="pi pi-trash" class="p-button-rounded p-button-danger ml-2" [disabled]="getDisableStats(data.status)"  (click)="deleteArchieve(data)"></button>
+                    </td>
+                </tr>
+            </ng-template>
+            <!-- <ng-template pTemplate="loadingbody" let-columns>
+                <tr style="height:46px">
+                    <td *ngFor="let col of columns; let even = even">
+                        <p-skeleton [ngStyle]="{'width': even ? (col.field === 'year' ? '30%' : '40%') : '60%'}"></p-skeleton>
+                    </td>
+                </tr>
+            </ng-template> -->
+
+            <ng-template pTemplate="emptymessage">
+                <tr>
+                    <td><span>No Record Found</span></td>
+                   <td>{{todayDate | date: 'dd/MM/yyyy'}} </td>
+                  
+                   <td> <span>No Data</span></td>   
+                   <td><span *ngIf="lengthdata == undefined">0 </span>
+                    <span *ngIf="lengthdata != undefined">{{lengthdata}}</span>
+                    
+                    </td>
+                   <td> <span>-</span></td>
+                   <td>
+                    <button pButton pRipple icon="pi pi-spin pi-spinner" class="p-button-rounded p-button-warning"></button>
+                   </td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </div>
+    <p-toast position="bottom-right" [breakpoints]="{'920px': {width: '100%', right: '0', left: '0'}}"></p-toast>
+    </div>

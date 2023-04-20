@@ -10,6 +10,7 @@ import { InvoiceItemComponent } from './invoice-item/invoice-item.component';
 import { AboutComponent } from './about/about.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { PaymentComponent } from './payment/payment.component';
+import { HistoryPageDownloadComponent } from './history-page-download/history-page-download.component';
 
 
 @NgModule({
@@ -19,7 +20,8 @@ import { PaymentComponent } from './payment/payment.component';
     InvoiceItemComponent,
     AboutComponent,
     DashboardComponent,
-    PaymentComponent
+    PaymentComponent,
+    HistoryPageDownloadComponent
   ],
   imports: [
     CommonModule,

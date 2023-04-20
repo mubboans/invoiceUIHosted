@@ -5,8 +5,8 @@
                 <div class="flex align-items-center justify-content-between">
                     <span>Total Customer</span> 
                     <div style="display:flex; align-items: center;justify-content: center;">
-                        <p-fileUpload style="margin-right:5px;" styleClass="p-mr-2" customUpload="true" #fileUpload mode="basic" name="demo[]" accept=".csv" maxFileSize="1000000" (onSelect)="onUpload($event,fileUpload)" [auto]="true" chooseLabel="Upload CSV"></p-fileUpload>
-        <p-button icon="pi pi-plus" (click)="addCustomer()" label="Add New"></p-button>
+                        <p-fileUpload styleClass="p-mr-2" customUpload="true" #fileUpload mode="basic" name="demo[]" accept=".csv" maxFileSize="1000000" (onSelect)="onUpload($event,fileUpload)" [auto]="true" chooseLabel="Upload CSV"></p-fileUpload>
+        <p-button class="ml-2" icon="pi pi-plus" (click)="addCustomer()" label="Add New"></p-button>
                     </div>
                     
                 </div>
