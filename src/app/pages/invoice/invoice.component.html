@@ -23,9 +23,9 @@
             </div>
             <p-toolbar styleClass="p-mb-4 p-mt-2">
                 <ng-template pTemplate="left">
-                    <button pButton pRipple icon="pi pi-arrow-down" class="p-button-info mr-2"  (click)="bulkInvoicePdf();loadingState=true" [disabled]="!deleteId || !deleteId.length"></button>   
+                    <!-- <button pButton pRipple icon="pi pi-arrow-down" class="p-button-info mr-2"  (click)="bulkInvoicePdf();loadingState=true" [disabled]="!deleteId || !deleteId.length"></button>   
                     <button pButton pRipple icon="pi pi-arrow-down" class="p-button-help mr-2"  (click)="bulkInvoicePdfdir();loadingState=true" [disabled]="!deleteId || !deleteId.length"></button>  
-                    <button pButton pRipple class="p-button-warn mr-2" label="Generate Zip" (click)="viewDownloadHistory()"></button>
+                    <button pButton pRipple class="p-button-warn mr-2" label="Generate Zip" (click)="viewDownloadHistory()"></button> -->
                     <button pButton pRipple [label]="Delete" icon="pi pi-trash" class="p-button-danger p-ml-2" (click)="deleteSelectedProducts()" [disabled]="!deleteId || !deleteId.length"></button> 
                 </ng-template>
         
@@ -68,16 +68,18 @@
                     {{product.invoiceno}}
                 </td>
                 
-                <td> <a href="{{product.paymentDetail.link_url}}" target="_blank">Payment Link</a>  </td>
-                <td> <p-tag value="{{product.paymentDetail.link_status}}" (click)="getPaymentStatus(product.paymentDetail.link_id,product)" severity="warning" icon="pi pi-refresh pi-spin"></p-tag></td>
+                <td>
+                    {{product.paymentType == 1 ? 'Payment Link' : 'Payment Gateway'}}
+                     <br> <a *ngIf="product.paymentType == 1" href="{{product.paymentDetail.link_url}}" target="_blank">Payment Link</a>  </td>
+                <td> <p-tag value="{{product.paymentDetail.link_status}}" (click)="getPaymentStatus(product.paymentDetail.link_id,product)" [severity]="product.paymentDetail.link_status? (product.paymentDetail.link_status == 'ACTIVE'? 'info': (product.paymentDetail.link_status == 'PAID'?'success':'warning')): 'warning'" icon="pi pi-refresh pi-spin"></p-tag></td>
                 <!-- {{getPaymentStatus(product.paymentDetail.link_id)}} -->
                 <td> {{product.paymentDetail.link_amount_paid}} </td>
                 <td>{{product.totalamount}}</td>
                 <td> 
-                     
-                    <button pButton pRipple icon="pi pi-download" class="p-button-rounded p-button-help p-mr-2" (click)="getReadPdf(product)"></button>
-                    <button pButton pRipple icon="pi pi-file-pdf" class="p-button-rounded p-button-danger p-mr-2" (click)="getPdf(product)"></button>
-                    <button pButton pRipple icon="pi pi-pencil" class="p-button-rounded p-button-success p-mr-2" (click)="editInvoice(product)"></button>
+                    <button pButton pRipple icon="pi pi-eye" class="p-button-rounded p-button-info mr-1" *ngIf="product.paymentDetail.link_status == 'PARTIALLY_PAID'" (click)="getPaymentDet(product)"></button> 
+                    <!-- <button pButton pRipple icon="pi pi-download" class="p-button-rounded p-button-help p-mr-2" (click)="getReadPdf(product)"></button> -->
+                    <button pButton pRipple icon="pi pi-file-pdf" class="p-button-rounded p-button-danger mr-2" (click)="getPdf(product)"></button>
+                    <button pButton pRipple icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2" (click)="editInvoice(product)"></button>
                     <button pButton pRipple icon="pi pi-trash" class="p-button-rounded p-button-warning" (click)="deleteInvoice(product)"></button>
                 </td>
             </tr>
@@ -147,24 +149,24 @@
         </div>
         
         <div class="p-fluid p-form-grid grid">
-            <div class="p-field md:col-12 lg:col-6">
+            <!-- <div class="p-field md:col-12 lg:col-6">
                    <span>Select Payment Type</span>
                    </div>
                    <div class="p-field md:col-12 lg:col-6">
                        <span>
                         <p-dropdown [options]="paymentArray" placeholder="Select Payment Method" formControlName="paymentType" optionLabel="name" optionValue="value"></p-dropdown>
                        </span> 
-                   </div>
+                   </div> -->
 
 
-                   <div class="p-field md:col-12 lg:col-6" *ngIf="invoiceGroup.get('paymentType').value == 2">
+                   <!-- <div class="p-field md:col-12 lg:col-6" *ngIf="invoiceGroup.get('paymentType').value == 2">
                     <span>Select Payment Gateway Method</span>
                     </div>
                    <div class="p-field md:col-12 lg:col-6" *ngIf="invoiceGroup.get('paymentType').value == 2">
                     <span>
                         <p-multiSelect [options]="typesmethod" formControlName="methodtype" defaultLabel="Select a Method type" optionLabel="name" optionValue="value" display="chip"></p-multiSelect>
                     </span> 
-                </div>
+                </div> -->
                    
                    <div class="p-field md:col-12 lg:col-6">
                     <input type="text" #code (input)="code.value = code.value.toUpperCase()" pInputText placeholder="Select Currency" formControlName="link_currency">
@@ -172,14 +174,14 @@
                    <div class="p-field md:col-12 lg:col-6">
                     <input type="text" pInputText placeholder="Select Purpose" formControlName="link_purpose">
                    </div>
-                   <div class="p-field field-checkbox md:col-12 lg:col-6"  *ngIf="invoiceGroup.get('paymentType').value == 1">
+                   <div class="p-field field-checkbox md:col-12 lg:col-6">
                     <label for="date">Do you want partial payment</label> <br>
                     <p-radioButton name="link_partial_payments" [value]="true" label="Yes" formControlName="link_partial_payments"></p-radioButton>
                     <p-radioButton name="link_partial_payments" [value]="false" label="No" formControlName="link_partial_payments"></p-radioButton>
                     
                    </div>
 
-                   <div class="p-field field-checkbox md:col-12 lg:col-6"  *ngIf="invoiceGroup.get('paymentType').value == 1">
+                   <div class="p-field field-checkbox md:col-12 lg:col-6">
                     <input type="number" pInputText placeholder="Enter Minimum Amount" formControlName="link_minimum_partial_amount">
                    </div>
 
@@ -299,10 +301,32 @@
         </div>
 </form>
 </p-dialog>
-<p-dialog [(visible)]="invoicepdf" [modal]="true" [breakpoints]="{'1000px': '75vw', '640px': '100vw'}" [style]="{width: '90vw'}">
-   <div id="invoiceId" #invoiceId> 
+<p-dialog [(visible)]="payDeatail" [modal]="true" [breakpoints]="{'1000px': '75vw', '640px': '100vw'}" [style]="{width: '90vw'}">
     
-   </div>
+    <p-table  [value]="tabDataPayDetail" styleClass="p-datatable-responsive-demo">
+        <ng-template pTemplate="header">
+            <tr>
+                <th>No</th>
+                <th>
+                    Payment Received
+                </th>
+                <th>Payment Time </th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-rowData>
+            <tr>
+                <td>
+                    <span>{{rowData._id}}</span>
+                </td>
+                <td> {{rowData.amount}} </td>
+                <td> {{rowData.createdAt}} </td>
+            </tr>
+        </ng-template>
+    </p-table>
 </p-dialog>
+<p-dialog [(visible)]="invoicepdf" [modal]="true" [breakpoints]="{'1000px': '75vw', '640px': '100vw'}" [style]="{width: '90vw'}">
+    <div id="invoiceId" #invoiceId> 
+    </div>
+ </p-dialog>
 <p-toast position="bottom-right" [breakpoints]="{'920px': {width: '100%', right: '0', left: '0'}}"></p-toast>
-<p-confirmDialog header="Confirmation" icon="pi pi-exclamation-triangle"></p-confirmDialog> 
+<p-confirmDialog [breakpoints]="{'960px': '75vw', '640px': '100vw'}" [style]="{width: '50vw'}" header="Confirmation" icon="pi pi-exclamation-triangle"></p-confirmDialog> 

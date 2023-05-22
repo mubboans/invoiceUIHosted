@@ -23,6 +23,8 @@ import { Router } from '@angular/router';
 export class InvoiceComponent implements OnInit {
   invoiceArr:Invoice[];
   invoiceObj:Invoice;
+  payDeatail:boolean=false;
+  tabDataPayDetail:any[];
   invoiceDialog:boolean;
   custArray:any[];
   submitted:boolean = false;
@@ -65,10 +67,21 @@ export class InvoiceComponent implements OnInit {
     this.createInvoiceFormgroup()
     
   }
+
+  getPaymentDet(product){
+    this.payDeatail=true;
+    console.log(product.paymentDetail._id);
+    this.paymentService.getPaymentDetail(product.paymentDetail._id).subscribe((x)=>{
+      console.log(x,'paydetail9');
+      this.tabDataPayDetail = x.data;
+    })
+    
+  }
+  
   createInvoiceFormgroup(){
     this.invoiceGroup=this.fb.group({
       _id:this.fb.control(''),
-      paymentType:this.fb.control('',Validators.required),
+      paymentType:this.fb.control(1,Validators.required),
       createdOn:this.fb.control('',Validators.required),
      invoicedate:this.fb.control('',Validators.required),
      totalamount:this.fb.control('',Validators.required),
@@ -109,7 +122,7 @@ export class InvoiceComponent implements OnInit {
  })
  this.invoiceGroup.valueChanges.subscribe((x)=>{
   console.log(x.link_partial_payments);
-  if(x && x.paymentType){
+  if(x && x.customerId){
 
     // x.link_currency.value= 'INR',
     this.invoiceGroup.get('link_currency').enable({onlySelf:true});
@@ -423,6 +436,7 @@ addItem(){
   getPdf(obj){
     this.invoicepdf=true;
     this.invoiceService.getInvoicePdfbyNo(obj.invoiceno).subscribe((x:any)=>{
+      console.log(x); 
       this.invoicecontent = x;
       this.invoiceId.nativeElement.innerHTML =this.invoicecontent;
       
@@ -440,6 +454,8 @@ addItem(){
     return d[0];
   }
   getPaymentStatus(obj,invoice):any{
+    console.log(obj);
+    
     this.paymentService.getPaymentStatus(obj).subscribe((x:any)=>{
       if(x.success){
         console.log(x.data.link_status);
@@ -477,7 +493,8 @@ addItem(){
       item:items,
       invoicedate:this.invoiceGroup.get('invoicedate').value,
       invoiceno:this.invoiceGroup.get('invoiceno').value,
-      paymentType:this.invoiceGroup.get('paymentType').value,
+      // paymentType:this.invoiceGroup.get('paymentType').value,
+      paymentType:1,
       link_notify:{
         send_sms:Boolean(this.invoiceGroup.get('link_notify.send_sms').value),
         send_email:Boolean(this.invoiceGroup.get('link_notify.send_email').value)

@@ -10,6 +10,17 @@ import { environment } from 'src/environments/environment';
 export class PaymentService {
 
   constructor(public http:HttpClient) { }
+
+
+  getPaymentDetail(id){
+    return this.http.get<any>(`${environment.serverUrl}invoice/payement/history/data:${id}`).pipe(
+      map(x=>{
+        return x;
+      }),catchError(this.handleError)
+    )
+
+  }
+
   updateStatus(id,data):Observable<any>{
     return this.http.patch(`${environment.serverUrl}invoice/payment/update:${id}`,data).pipe(
       map(x=>{
@@ -18,6 +29,8 @@ export class PaymentService {
     )
   }
   getPaymentStatus(id):Observable<any>{
+    console.log(id);
+    
     return this.http.get<any>(`${environment.serverUrl}invoice/payment/status:${id}`).pipe(
       map(x=>{
         return x;
